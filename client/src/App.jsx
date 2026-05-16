@@ -1,8 +1,95 @@
+import { useEffect, useState } from "react";
+
 function App() {
+  const [habits, setHabits] = useState([]);
+  const [title, setTitle] = useState("");
+  const [frequency, setFrequency] = useState("Daily");
+
+  const token = localStorage.getItem("token");
+
+  const fetchHabits = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/habits", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      setHabits(data);
+    } catch (error) {
+      console.error("Error fetching habits:", error);
+    }
+  };
+
+  const createHabit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch("http://localhost:5000/api/habits", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, frequency }),
+      });
+
+      const newHabit = await response.json();
+      setHabits([...habits, newHabit]);
+      setTitle("");
+      setFrequency("Daily");
+    } catch (error) {
+      console.error("Error creating habit:", error);
+    }
+  };
+
+  const completeHabit = async (id) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/habits/${id}/complete`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const updatedHabit = await response.json();
+
+      setHabits(
+        habits.map((habit) => (habit._id === id ? updatedHabit : habit))
+      );
+    } catch (error) {
+      console.error("Error completing habit:", error);
+    }
+  };
+
+  const deleteHabit = async (id) => {
+    try {
+      await fetch(`http://localhost:5000/api/habits/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setHabits(habits.filter((habit) => habit._id !== id));
+    } catch (error) {
+      console.error("Error deleting habit:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchHabits();
+    }
+  }, []);
+
   return (
     <div className="min-vh-100 bg-light w-100">
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark px-4 w-100">
-        {" "}
         <a className="navbar-brand fw-bold" href="#">
           Smart Task & Habit Tracker
         </a>
@@ -103,6 +190,91 @@ function App() {
                 <p className="text-muted">Simple insights based on progress.</p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="container pb-5">
+        <div className="card shadow-sm border-0">
+          <div className="card-body p-4">
+            <h2 className="fw-bold mb-2">Habit Tracking</h2>
+            <p className="text-muted">
+              Create habits, monitor streaks, and track progress over time.
+            </p>
+
+            {!token && (
+              <div className="alert alert-warning">
+                No login token found. Please log in first so habits can load.
+              </div>
+            )}
+
+            <form onSubmit={createHabit} className="row g-2 mb-4">
+              <div className="col-md-7">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter habit title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="col-md-3">
+                <select
+                  className="form-select"
+                  value={frequency}
+                  onChange={(e) => setFrequency(e.target.value)}
+                >
+                  <option value="Daily">Daily</option>
+                  <option value="Weekly">Weekly</option>
+                  <option value="Monthly">Monthly</option>
+                </select>
+              </div>
+
+              <div className="col-md-2 d-grid">
+                <button type="submit" className="btn btn-primary">
+                  Add Habit
+                </button>
+              </div>
+            </form>
+
+            {habits.length === 0 ? (
+              <p className="text-muted">No habits yet. Add one above.</p>
+            ) : (
+              <div className="row">
+                {habits.map((habit) => (
+                  <div key={habit._id} className="col-md-6 mb-3">
+                    <div className="card h-100 border">
+                      <div className="card-body">
+                        <h5 className="fw-bold">{habit.title}</h5>
+                        <p className="mb-1">Frequency: {habit.frequency}</p>
+                        <p className="mb-3">
+                          Current Streak:{" "}
+                          <span className="badge bg-success">
+                            {habit.streakCount}
+                          </span>
+                        </p>
+
+                        <button
+                          className="btn btn-success btn-sm me-2"
+                          onClick={() => completeHabit(habit._id)}
+                        >
+                          Mark Complete
+                        </button>
+
+                        <button
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => deleteHabit(habit._id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
