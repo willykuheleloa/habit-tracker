@@ -1,30 +1,52 @@
+import { CheckCircle2, Flame, Repeat, Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
+
 function HabitCard({ habit, completeHabit, deleteHabit }) {
   return (
-    <div className="col-md-6 mb-3">
-      <div className="card h-100 border">
-        <div className="card-body">
-          <h5 className="fw-bold">{habit.title}</h5>
-          <p className="mb-1">Frequency: {habit.frequency}</p>
-          <p className="mb-3">
-            Current Streak:{" "}
-            <span className="badge bg-success">{habit.streakCount}</span>
-          </p>
+    <div className="col-xl-4 col-md-6">
+      <motion.div
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
+        className="habit-card-modern"
+      >
+        <div className="d-flex justify-content-between align-items-start mb-3">
+          <div className="habit-frequency-badge">{habit.frequency}</div>
 
           <button
-            className="btn btn-success btn-sm me-2"
-            onClick={() => completeHabit(habit._id)}
-          >
-            Mark Complete
-          </button>
-
-          <button
-            className="btn btn-outline-danger btn-sm"
+            className="btn btn-sm btn-light rounded-circle"
             onClick={() => deleteHabit(habit._id)}
           >
-            Delete
+            <Trash2 size={16} />
           </button>
         </div>
-      </div>
+
+        <h5 className="fw-bold mb-4">{habit.title}</h5>
+
+        <div className="habit-streak-box mb-4">
+          <div className="habit-streak-icon">
+            <Flame size={20} />
+          </div>
+
+          <div>
+            <p className="text-muted mb-1 small">Current Streak</p>
+
+            <h4 className="fw-bold mb-0">{habit.streakCount || 0} days</h4>
+          </div>
+        </div>
+
+        <div className="task-meta mb-4">
+          <Repeat size={16} />
+          <span>Repeats {habit.frequency}</span>
+        </div>
+
+        <button
+          className="btn btn-dark w-100 rounded-4"
+          onClick={() => completeHabit(habit._id)}
+        >
+          <CheckCircle2 size={18} className="me-2" />
+          Complete Habit
+        </button>
+      </motion.div>
     </div>
   );
 }

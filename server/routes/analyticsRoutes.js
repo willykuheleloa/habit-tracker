@@ -6,22 +6,45 @@ const { protect } = require("../middleware/authMiddleware");
 
 const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const getFallbackSuggestion = ({ pendingTasks, totalHabits, totalCompletions, bestStreak }) => {
+const getFallbackSuggestion = ({
+  pendingTasks,
+  totalHabits,
+  totalCompletions,
+  bestStreak,
+}) => {
   if (pendingTasks > 0) {
-    const taskLabel = pendingTasks === 1 ? "task" : "tasks";
-    return `You have ${pendingTasks} pending ${taskLabel}. Try finishing one small task today.`;
+    return {
+      suggestion: `You have ${pendingTasks} pending task${pendingTasks === 1 ? "" : "s"}.`,
+      reason: "Finishing one small task can help you build momentum today.",
+      focusArea: "Tasks",
+      actionStep: "Pick the easiest pending task and complete it first.",
+    };
   }
 
   if (totalHabits === 0) {
-    return "Add one simple habit to start building a routine.";
+    return {
+      suggestion: "Add one simple habit to start building a routine.",
+      reason: "Small habits make your progress easier to track over time.",
+      focusArea: "Habits",
+      actionStep: "Create one habit you can complete daily.",
+    };
   }
 
   if (totalCompletions === 0) {
-    return "Complete one habit today to start building momentum.";
+    return {
+      suggestion: "Complete one habit today to start building momentum.",
+      reason: "Your habit tracker needs completed days to show progress.",
+      focusArea: "Habits",
+      actionStep: "Mark one habit as complete today.",
+    };
   }
 
-  const dayLabel = bestStreak === 1 ? "day" : "days";
-  return `Your best habit streak is ${bestStreak} ${dayLabel}. Keep that routine going.`;
+  return {
+    suggestion: `Your best habit streak is ${bestStreak} day${bestStreak === 1 ? "" : "s"}. Keep it going.`,
+    reason: "Consistency is one of the strongest signs of long-term progress.",
+    focusArea: "Consistency",
+    actionStep: "Complete the same habit again today.",
+  };
 };
 
 const getAiSuggestion = async (summary, habits, tasks) => {
@@ -55,15 +78,28 @@ const getAiSuggestion = async (summary, habits, tasks) => {
           {
             role: "system",
             content:
-              "You are a productivity coach for a student habit tracker app. Give one simple, specific, actionable suggestion. Do not invent information that is not provided.",
+              "You are a productivity coach for a student task and habit tracker app. Return only valid JSON with these exact keys: suggestion, reason, focusArea, actionStep. Keep each value short, specific, and helpful. Do not invent data.",
           },
           {
             role: "user",
-            content: `Return exactly one short productivity suggestion based on this data.\n\nSummary:\n${JSON.stringify(
-              summary
-            )}\n\nTasks:\n${JSON.stringify(
-              taskSummary
-            )}\n\nHabits:\n${JSON.stringify(habitSummary)}`,
+            content: `Based on this user's task and habit data, create one helpful AI productivity suggestion.
+
+              Return only JSON in this format:
+              {
+                "suggestion": "",
+                "reason": "",
+                "focusArea": "",
+                "actionStep": ""
+              }
+
+              Summary:
+              ${JSON.stringify(summary)}
+
+              Tasks:
+              ${JSON.stringify(taskSummary)}
+
+              Habits:
+              ${JSON.stringify(habitSummary)}`,
           },
         ],
       }),
@@ -83,7 +119,11 @@ const getAiSuggestion = async (summary, habits, tasks) => {
         ?.join("\n") ||
       "";
 
-    return text.trim() || getFallbackSuggestion(summary);
+    try {
+      return JSON.parse(text);
+    } catch {
+      return getFallbackSuggestion(summary);
+    }
   } catch (error) {
     console.error("AI suggestion error:", error.message);
     return getFallbackSuggestion(summary);
@@ -100,20 +140,18 @@ router.get("/", protect, async (req, res) => {
     const pendingTasks = tasks.filter((task) => !task.completed).length;
 
     const taskCompletionRate =
-      totalTasks === 0
-        ? 0
-        : Math.round((completedTasks / totalTasks) * 100);
+      totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
     const totalHabits = habits.length;
 
     const totalCompletions = habits.reduce(
       (total, habit) => total + habit.completedDates.length,
-      0
+      0,
     );
 
     const bestStreak = habits.reduce(
       (best, habit) => Math.max(best, habit.streakCount),
-      0
+      0,
     );
 
     const averageStreak =
@@ -123,7 +161,7 @@ router.get("/", protect, async (req, res) => {
             (
               habits.reduce((total, habit) => total + habit.streakCount, 0) /
               totalHabits
-            ).toFixed(1)
+            ).toFixed(1),
           );
 
     const startOfWeek = new Date();
@@ -148,7 +186,10 @@ router.get("/", protect, async (req, res) => {
         : Math.min(100, Math.round((totalCompletions / totalHabits) * 100));
 
     const productivityScore = Math.round(
-      (habitCompletionRate + taskCompletionRate + Math.min(bestStreak * 10, 100)) / 3
+      (habitCompletionRate +
+        taskCompletionRate +
+        Math.min(bestStreak * 10, 100)) /
+        3,
     );
 
     res.status(200).json({
@@ -172,8 +213,8 @@ router.get("/", protect, async (req, res) => {
           productivityScore >= 75
             ? "Strong productivity progress this week."
             : productivityScore >= 40
-            ? "Good start. Keep completing tasks and habits to improve your score."
-            : "Add and complete tasks and habits to build stronger productivity trends.",
+              ? "Good start. Keep completing tasks and habits to improve your score."
+              : "Add and complete tasks and habits to build stronger productivity trends.",
       },
     });
   } catch (error) {
@@ -196,12 +237,12 @@ router.get("/suggestion", protect, async (req, res) => {
 
     const totalCompletions = habits.reduce(
       (total, habit) => total + habit.completedDates.length,
-      0
+      0,
     );
 
     const bestStreak = habits.reduce(
       (best, habit) => Math.max(best, habit.streakCount),
-      0
+      0,
     );
 
     const summary = {
@@ -214,7 +255,7 @@ router.get("/suggestion", protect, async (req, res) => {
     };
 
     const suggestion = await getAiSuggestion(summary, habits, tasks);
-    res.status(200).json({ suggestion });
+    res.status(200).json(suggestion);
   } catch (error) {
     res.status(500).json({
       message: "Error fetching AI suggestion",

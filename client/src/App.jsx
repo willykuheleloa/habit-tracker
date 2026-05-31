@@ -1,263 +1,93 @@
-import { useEffect, useState } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Navbar from "./components/Navbar";
-import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
-import Habits from "./pages/Habits";
-import toastr from "toastr";
 import Tasks from "./pages/Tasks";
-import {
-  getHabits,
-  getAnalytics,
-  createHabitRequest,
-  completeHabitRequest,
-  deleteHabitRequest,
-  getTasks,
-  createTaskRequest,
-  completeTaskRequest,
-  deleteTaskRequest,
-} from "./services/api";
+import Habits from "./pages/Habits";
+import Dashboard from "./pages/Dashboard";
+import AppLayout from "./components/layout/AppLayout";
+
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <AppLayout>{children}</AppLayout>;
+}
+
+function PublicRoute({ children }) {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+}
 
 function App() {
-  const [habits, setHabits] = useState([]);
-  const [analyticsData, setAnalyticsData] = useState(null);
-  const [currentView, setCurrentView] = useState(
-    localStorage.getItem("token") ? "home" : "register",
-  );
-  const [title, setTitle] = useState("");
-  const [frequency, setFrequency] = useState("Daily");
-  const [tasks, setTasks] = useState([]);
-  const [taskTitle, setTaskTitle] = useState("");
-  const [taskDueDate, setTaskDueDate] = useState("");
-  const [taskFrequency, setTaskFrequency] = useState("daily");
-
-  const [token, setToken] = useState(localStorage.getItem("token"));
-  const analytics = analyticsData || {
-    totalHabits: 0,
-    totalCompletions: 0,
-    bestStreak: 0,
-    averageStreak: 0,
-    weeklyCompletions: [],
-  };
-  const weeklyCompletions = analytics.weeklyCompletions || [];
-  const usingDemoAnalytics = false;
-  const weeklyMax = Math.max(...weeklyCompletions.map((item) => item.count), 1);
-
-  const fetchHabits = async () => {
-    try {
-      const data = await getHabits();
-      setHabits(data);
-    } catch (error) {
-      console.error("Error fetching habits:", error);
-    }
-  };
-
-  const fetchAnalytics = async () => {
-    try {
-      const data = await getAnalytics();
-      setAnalyticsData(data);
-    } catch (error) {
-      console.error("Error fetching analytics:", error);
-    }
-  };
-
-  const fetchTasks = async () => {
-    try {
-      const data = await getTasks();
-      setTasks(data);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-    }
-  };
-
-  const handleSetCurrentView = (view) => {
-    const currentToken = localStorage.getItem("token");
-    setToken(currentToken);
-
-    if (view === "dashboard" && !currentToken) {
-      toastr.warning("Please log in to view your dashboard.");
-      setCurrentView("login");
-      return;
-    }
-
-    setCurrentView(view);
-  };
-
-  const createHabit = async (e) => {
-    e.preventDefault();
-
-    if (!token) {
-      toastr.warning("Please log in first.");
-      setCurrentView("login");
-      return;
-    }
-
-    try {
-      const newHabit = await createHabitRequest({ title, frequency });
-      setHabits([...habits, newHabit]);
-      setTitle("");
-      setFrequency("Daily");
-
-      fetchAnalytics();
-    } catch (error) {
-      console.error("Error creating habit:", error);
-    }
-  };
-
-  const completeHabit = async (id) => {
-    try {
-      const updatedHabit = await completeHabitRequest(id);
-
-      setHabits(
-        habits.map((habit) => (habit._id === id ? updatedHabit : habit)),
-      );
-
-      if (token) {
-        fetchAnalytics();
-      }
-    } catch (error) {
-      console.error("Error completing habit:", error);
-    }
-  };
-
-  const deleteHabit = async (id) => {
-    try {
-      await deleteHabitRequest(id);
-
-      setHabits(habits.filter((habit) => habit._id !== id));
-
-      if (token) {
-        fetchAnalytics();
-      }
-    } catch (error) {
-      console.error("Error deleting habit:", error);
-    }
-  };
-
-  const createTask = async (e) => {
-    e.preventDefault();
-
-    if (!token) {
-      toastr.warning("Please log in first.");
-      setCurrentView("login");
-      return;
-    }
-
-    try {
-      const newTask = await createTaskRequest({
-        title: taskTitle,
-        dueDate: taskDueDate || null,
-        frequency: taskFrequency,
-      });
-
-      setTasks([...tasks, newTask]);
-
-      setTaskTitle("");
-      setTaskDueDate("");
-      setTaskFrequency("daily");
-    } catch (error) {
-      console.error("Error creating task:", error);
-    }
-  };
-
-  const completeTask = async (id) => {
-    try {
-      const updatedTask = await completeTaskRequest(id);
-
-      setTasks(tasks.map((task) => (task._id === id ? updatedTask : task)));
-    } catch (error) {
-      console.error("Error completing task:", error);
-    }
-  };
-
-  const deleteTask = async (id) => {
-    try {
-      await deleteTaskRequest(id);
-
-      setTasks(tasks.filter((task) => task._id !== id));
-    } catch (error) {
-      console.error("Error deleting task:", error);
-    }
-  };
-
-  useEffect(() => {
-    const currentToken = localStorage.getItem("token");
-    setToken(currentToken);
-
-    if (currentView === "dashboard" && !currentToken) {
-      toastr.warning("Please log in to view your dashboard.");
-      setCurrentView("login");
-    }
-  }, [currentView]);
-
-  useEffect(() => {
-    if (token) {
-      fetchHabits();
-      fetchTasks();
-      fetchAnalytics();
-    }
-  }, []);
-
   return (
-    <div className="min-vh-100 bg-light w-100">
-      <Navbar token={token} setCurrentView={handleSetCurrentView} />{" "}
-      {currentView === "home" && (
-        <Home
-          token={token}
-          setCurrentView={handleSetCurrentView}
-          tasks={tasks}
-          habits={habits}
-          analytics={analytics}
-        />
-      )}
-      {currentView === "habits" && token && (
-        <Habits
-          token={token}
-          habits={habits}
-          title={title}
-          setTitle={setTitle}
-          frequency={frequency}
-          setFrequency={setFrequency}
-          createHabit={createHabit}
-          completeHabit={completeHabit}
-          deleteHabit={deleteHabit}
-        />
-      )}
-      {currentView === "login" && (
-        <Login setCurrentView={handleSetCurrentView} />
-      )}
-      {currentView === "register" && (
-        <Register setCurrentView={handleSetCurrentView} />
-      )}
-      {currentView === "dashboard" && token && (
-        <Dashboard
-          analytics={analytics}
-          weeklyCompletions={weeklyCompletions}
-          weeklyMax={weeklyMax}
-          usingDemoAnalytics={usingDemoAnalytics}
-          setCurrentView={handleSetCurrentView}
-        />
-      )}
-      {currentView === "dashboard" && !token && (
-        <Login setCurrentView={handleSetCurrentView} />
-      )}
-      {currentView === "tasks" && token && (
-        <Tasks
-          token={token}
-          tasks={tasks}
-          taskTitle={taskTitle}
-          setTaskTitle={setTaskTitle}
-          taskDueDate={taskDueDate}
-          setTaskDueDate={setTaskDueDate}
-          createTask={createTask}
-          completeTask={completeTask}
-          deleteTask={deleteTask}
-          taskFrequency={taskFrequency}
-          setTaskFrequency={setTaskFrequency}
-        />
-      )}
-    </div>
+    <Routes>
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <Register />
+          </PublicRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/tasks"
+        element={
+          <ProtectedRoute>
+            <Tasks />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/habits"
+        element={
+          <ProtectedRoute>
+            <Habits />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/analytics"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
 }
 

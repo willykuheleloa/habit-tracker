@@ -1,17 +1,21 @@
+import { NavLink, useNavigate } from "react-router-dom";
 import toastr from "toastr";
 import { logoutUser } from "../services/api";
 
-function Navbar({ token, setCurrentView }) {
+function Navbar() {
+  const navigate = useNavigate();
+
   const handleLogout = async () => {
     try {
       await logoutUser();
-
       localStorage.removeItem("token");
+      localStorage.removeItem("username");
+
       toastr.success("You have been logged out successfully.");
 
       setTimeout(() => {
-        setCurrentView("login");
-      }, 1200);
+        navigate("/login");
+      }, 800);
     } catch (error) {
       console.error(error);
       toastr.error("Logout failed. Please try again.");
@@ -23,41 +27,25 @@ function Navbar({ token, setCurrentView }) {
       <h3 className="text-light m-0">Smart Task & Habit Tracker</h3>
 
       <div className="ms-auto">
-        {token ? (
-          <>
-            <button
-              className="btn btn-outline-light me-2"
-              onClick={() => setCurrentView("home")}
-            >
-              Home
-            </button>
+        <NavLink className="btn btn-outline-light me-2" to="/dashboard">
+          Home
+        </NavLink>
 
-            <button
-              className="btn btn-outline-light me-2"
-              onClick={() => setCurrentView("tasks")}
-            >
-              Tasks
-            </button>
+        <NavLink className="btn btn-outline-light me-2" to="/tasks">
+          Tasks
+        </NavLink>
 
-            <button
-              className="btn btn-outline-light me-2"
-              onClick={() => setCurrentView("habits")}
-            >
-              Habits
-            </button>
+        <NavLink className="btn btn-outline-light me-2" to="/habits">
+          Habits
+        </NavLink>
 
-            <button
-              className="btn btn-outline-light me-2"
-              onClick={() => setCurrentView("dashboard")}
-            >
-              Dashboard
-            </button>
+        <NavLink className="btn btn-outline-light me-2" to="/analytics">
+          Analytics
+        </NavLink>
 
-            <button className="btn btn-danger" onClick={handleLogout}>
-              Logout
-            </button>
-          </>
-        ) : null}
+        <button className="btn btn-danger" onClick={handleLogout}>
+          Logout
+        </button>
       </div>
     </nav>
   );

@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { registerUser } from "../services/api";
 import toastr from "toastr";
 
-function Register({ setCurrentView }) {
+function Register() {
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,8 +22,8 @@ function Register({ setCurrentView }) {
       toastr.success("Registration successful! Please log in.");
 
       setTimeout(() => {
-        setCurrentView("login");
-      }, 1000);
+        navigate("/login");
+      }, 800);
     } catch (error) {
       console.error(error);
       toastr.error(error.message || "Registration failed. Please try again.");
@@ -78,13 +80,9 @@ function Register({ setCurrentView }) {
               Create Account
             </button>
 
-            <button
-              type="button"
-              className="btn btn-outline-secondary w-100 mt-2"
-              onClick={() => setCurrentView("login")}
-            >
+            <Link className="btn btn-outline-secondary w-100 mt-2" to="/login">
               Already have an account? Login
-            </button>
+            </Link>
           </form>
         </div>
       </div>

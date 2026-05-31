@@ -1,55 +1,64 @@
+import { Calendar, CheckCircle2, Clock3, Repeat, Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
+
 function TaskCard({ task, completeTask, deleteTask }) {
   const formattedDate = task.dueDate
     ? new Date(task.dueDate).toLocaleDateString()
     : "No due date";
 
   return (
-    <div className="col-md-6 mb-4 px-2">
-      <div className="card h-100 border shadow-sm rounded-4">
-        <div className="card-body p-4">
-          <h5
-            className={
-              task.completed
-                ? "fw-bold text-decoration-line-through text-muted"
-                : "fw-bold"
-            }
+    <div className="col-xl-4 col-md-6">
+      <motion.div
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
+        className="task-card-modern"
+      >
+        <div className="d-flex justify-content-between align-items-start mb-3">
+          <div
+            className={`task-status-badge ${
+              task.completed ? "completed" : "pending"
+            }`}
           >
-            {task.title}
-          </h5>
-
-          <p className="text-muted mb-2">Due Date: {formattedDate}</p>
-          <p className="text-muted mb-2">
-            Repeats: {task.frequency || "daily"}
-          </p>
-
-          <p className="mb-3">
-            Status:{" "}
-            <span
-              className={
-                task.completed
-                  ? "badge bg-success"
-                  : "badge bg-warning text-dark"
-              }
-            >
-              {task.completed ? "Completed" : "Pending"}
-            </span>
-          </p>
+            {task.completed ? "Completed" : "Pending"}
+          </div>
 
           <button
-            className="btn btn-success btn-sm me-2"
-            onClick={() => completeTask(task._id)}
-          >
-            {task.completed ? "Mark Pending" : "Mark Complete"}
-          </button>
-
-          <button
-            className="btn btn-outline-danger btn-sm"
+            className="btn btn-sm btn-light rounded-circle"
             onClick={() => deleteTask(task._id)}
           >
-            Delete
+            <Trash2 size={16} />
           </button>
         </div>
-      </div>
+
+        <h5
+          className={`fw-bold mb-3 ${
+            task.completed ? "text-decoration-line-through text-muted" : ""
+          }`}
+        >
+          {task.title}
+        </h5>
+
+        <div className="task-meta mb-2">
+          <Calendar size={16} />
+          <span>{formattedDate}</span>
+        </div>
+
+        <div className="task-meta mb-4">
+          <Repeat size={16} />
+          <span>{task.frequency || "daily"}</span>
+        </div>
+
+        <button
+          className={`btn w-100 rounded-4 ${
+            task.completed ? "btn-outline-secondary" : "btn-dark"
+          }`}
+          onClick={() => completeTask(task._id)}
+        >
+          <CheckCircle2 size={18} className="me-2" />
+
+          {task.completed ? "Mark Pending" : "Mark Complete"}
+        </button>
+      </motion.div>
     </div>
   );
 }

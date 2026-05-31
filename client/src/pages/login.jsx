@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { loginUser } from "../services/api";
 import toastr from "toastr";
 
-function Login({ setCurrentView }) {
+function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -18,9 +20,8 @@ function Login({ setCurrentView }) {
       toastr.success("Login successful!");
 
       setTimeout(() => {
-        setCurrentView("home");
-        window.location.reload();
-      }, 1000);
+        navigate("/dashboard");
+      }, 800);
     } catch (error) {
       console.error(error);
       toastr.error(error.message || "Login failed. Please try again.");
@@ -65,13 +66,12 @@ function Login({ setCurrentView }) {
               Login
             </button>
 
-            <button
-              type="button"
+            <Link
               className="btn btn-outline-secondary w-100 mt-2"
-              onClick={() => setCurrentView("register")}
+              to="/register"
             >
               No account? Register
-            </button>
+            </Link>
           </form>
         </div>
       </div>
