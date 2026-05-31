@@ -65,3 +65,5 @@ export const deleteHabitRequest = (id) => {
 };
 
 export const getAnalytics = () => apiRequest("/analytics");
+
+export const getAiSuggestion = () => apiRequest("/analytics/suggestion");

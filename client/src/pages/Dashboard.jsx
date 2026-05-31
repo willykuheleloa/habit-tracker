@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { getAiSuggestion } from "../services/api";
+
 function Dashboard({
   analytics,
   weeklyCompletions,
@@ -25,6 +28,23 @@ function Dashboard({
   const summary = analytics.summary || {
     productivityScore: 0,
     message: "Dashboard analytics will appear after activity is recorded.",
+  };
+
+  const [suggestion, setSuggestion] = useState("");
+  const [loadingSuggestion, setLoadingSuggestion] = useState(false);
+
+  const generateSuggestion = async () => {
+    setLoadingSuggestion(true);
+
+    try {
+      const data = await getAiSuggestion();
+      setSuggestion(data.suggestion);
+    } catch (error) {
+      console.error("Error generating AI suggestion:", error);
+      alert("Unable to generate suggestion right now.");
+    } finally {
+      setLoadingSuggestion(false);
+    }
   };
 
   return (
@@ -78,6 +98,30 @@ function Dashboard({
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="bg-light border rounded p-3 mb-4">
+            <div className="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+              <h4 className="fw-bold mb-0">AI Productivity Suggestion</h4>
+
+              <button
+                className="btn btn-primary btn-sm align-self-md-start"
+                onClick={generateSuggestion}
+                disabled={loadingSuggestion}
+              >
+                {loadingSuggestion ? "Generating..." : "Generate Suggestion"}
+              </button>
+            </div>
+
+            {suggestion ? (
+              <div className="list-group">
+                <div className="list-group-item">{suggestion}</div>
+              </div>
+            ) : (
+              <p className="text-muted mb-0">
+                Click the button to generate a personalized suggestion.
+              </p>
+            )}
           </div>
 
           <div className="bg-light border rounded p-3 mb-4">
