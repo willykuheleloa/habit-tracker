@@ -1,10 +1,13 @@
-import { Calendar, CheckCircle2, Clock3, Repeat, Trash2 } from "lucide-react";
+import { Calendar, CheckCircle2, Repeat, Tag, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 function TaskCard({ task, completeTask, deleteTask }) {
   const formattedDate = task.dueDate
     ? new Date(task.dueDate).toLocaleDateString()
     : "No due date";
+
+  const priority = task.priority || "medium";
+  const category = task.category || "other";
 
   return (
     <div className="col-xl-4 col-md-6">
@@ -14,15 +17,20 @@ function TaskCard({ task, completeTask, deleteTask }) {
         className="task-card-modern"
       >
         <div className="d-flex justify-content-between align-items-start mb-3">
-          <div
-            className={`task-status-badge ${
-              task.completed ? "completed" : "pending"
-            }`}
-          >
-            {task.completed ? "Completed" : "Pending"}
+          <div className="d-flex gap-2 flex-wrap">
+            <div
+              className={`task-status-badge ${
+                task.completed ? "completed" : "pending"
+              }`}
+            >
+              {task.completed ? "Completed" : "Pending"}
+            </div>
+
+            <div className={`task-priority-badge ${priority}`}>{priority}</div>
           </div>
 
           <button
+            type="button"
             className="btn btn-sm btn-light rounded-circle"
             onClick={() => deleteTask(task._id)}
           >
@@ -38,17 +46,29 @@ function TaskCard({ task, completeTask, deleteTask }) {
           {task.title}
         </h5>
 
+        {task.notes && <p className="text-muted small mb-3">{task.notes}</p>}
+
         <div className="task-meta mb-2">
           <Calendar size={16} />
           <span>{formattedDate}</span>
         </div>
 
-        <div className="task-meta mb-4">
+        <div className="task-meta mb-2">
           <Repeat size={16} />
-          <span>{task.frequency || "daily"}</span>
+          <span>
+            {task.frequency === "once"
+              ? "One-time task"
+              : `Repeats ${task.frequency}`}
+          </span>
+        </div>
+
+        <div className="task-meta mb-4">
+          <Tag size={16} />
+          <span>{category}</span>
         </div>
 
         <button
+          type="button"
           className={`btn w-100 rounded-4 ${
             task.completed ? "btn-outline-secondary" : "btn-dark"
           }`}

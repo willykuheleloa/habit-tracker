@@ -8,6 +8,12 @@ const taskSchema = new mongoose.Schema(
       trim: true,
     },
 
+    notes: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     dueDate: {
       type: Date,
       default: null,
@@ -15,12 +21,30 @@ const taskSchema = new mongoose.Schema(
 
     frequency: {
       type: String,
-      enum: ["daily", "weekly", "monthly"],
-      default: "daily",
+      enum: ["once", "daily", "weekly", "monthly"],
+      default: "once",
     },
+
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high"],
+      default: "medium",
+    },
+
+    category: {
+      type: String,
+      enum: ["school", "work", "personal", "health", "other"],
+      default: "other",
+    },
+
     completed: {
       type: Boolean,
       default: false,
+    },
+
+    completedAt: {
+      type: Date,
+      default: null,
     },
 
     userId: {
