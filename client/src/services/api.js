@@ -64,6 +64,27 @@ export const deleteHabitRequest = (id) => {
   });
 };
 
+export const getTasks = () => apiRequest("/tasks");
+
+export const createTaskRequest = (taskData) => {
+  return apiRequest("/tasks", {
+    method: "POST",
+    body: JSON.stringify(taskData),
+  });
+};
+
+export const completeTaskRequest = (id) => {
+  return apiRequest(`/tasks/${id}`, {
+    method: "PUT",
+  });
+};
+
+export const deleteTaskRequest = (id) => {
+  return apiRequest(`/tasks/${id}`, {
+    method: "DELETE",
+  });
+};
+
 export const getAnalytics = () => apiRequest("/analytics");
 
 export const getAiSuggestion = () => apiRequest("/analytics/suggestion");

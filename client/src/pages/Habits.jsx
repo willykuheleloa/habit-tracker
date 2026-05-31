@@ -13,9 +13,9 @@ function Habits({
   deleteHabit,
 }) {
   return (
-    <section className="container pb-5">
-      <div className="card shadow-sm border-0">
-        <div className="card-body p-4">
+    <section className="container py-5 px-4">
+      <div className="card shadow-sm border-0 rounded-4">
+        <div className="card-body p-5">
           <h2 className="fw-bold mb-2">Habit Tracking</h2>
 
           <p className="text-muted">

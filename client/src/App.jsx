@@ -1,11 +1,4 @@
 import { useEffect, useState } from "react";
-import {
-  getHabits,
-  getAnalytics,
-  createHabitRequest,
-  completeHabitRequest,
-  deleteHabitRequest,
-} from "./services/api";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Navbar from "./components/Navbar";
@@ -13,6 +6,18 @@ import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
 import Habits from "./pages/Habits";
 import toastr from "toastr";
+import Tasks from "./pages/Tasks";
+import {
+  getHabits,
+  getAnalytics,
+  createHabitRequest,
+  completeHabitRequest,
+  deleteHabitRequest,
+  getTasks,
+  createTaskRequest,
+  completeTaskRequest,
+  deleteTaskRequest,
+} from "./services/api";
 
 function App() {
   const [habits, setHabits] = useState([]);
@@ -22,6 +27,10 @@ function App() {
   );
   const [title, setTitle] = useState("");
   const [frequency, setFrequency] = useState("Daily");
+  const [tasks, setTasks] = useState([]);
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDueDate, setTaskDueDate] = useState("");
+  const [taskFrequency, setTaskFrequency] = useState("daily");
 
   const [token, setToken] = useState(localStorage.getItem("token"));
   const analytics = analyticsData || {
@@ -50,6 +59,15 @@ function App() {
       setAnalyticsData(data);
     } catch (error) {
       console.error("Error fetching analytics:", error);
+    }
+  };
+
+  const fetchTasks = async () => {
+    try {
+      const data = await getTasks();
+      setTasks(data);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
     }
   };
 
@@ -117,6 +135,52 @@ function App() {
     }
   };
 
+  const createTask = async (e) => {
+    e.preventDefault();
+
+    if (!token) {
+      toastr.warning("Please log in first.");
+      setCurrentView("login");
+      return;
+    }
+
+    try {
+      const newTask = await createTaskRequest({
+        title: taskTitle,
+        dueDate: taskDueDate || null,
+        frequency: taskFrequency,
+      });
+
+      setTasks([...tasks, newTask]);
+
+      setTaskTitle("");
+      setTaskDueDate("");
+      setTaskFrequency("daily");
+    } catch (error) {
+      console.error("Error creating task:", error);
+    }
+  };
+
+  const completeTask = async (id) => {
+    try {
+      const updatedTask = await completeTaskRequest(id);
+
+      setTasks(tasks.map((task) => (task._id === id ? updatedTask : task)));
+    } catch (error) {
+      console.error("Error completing task:", error);
+    }
+  };
+
+  const deleteTask = async (id) => {
+    try {
+      await deleteTaskRequest(id);
+
+      setTasks(tasks.filter((task) => task._id !== id));
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
   useEffect(() => {
     const currentToken = localStorage.getItem("token");
     setToken(currentToken);
@@ -130,6 +194,7 @@ function App() {
   useEffect(() => {
     if (token) {
       fetchHabits();
+      fetchTasks();
       fetchAnalytics();
     }
   }, []);
@@ -138,21 +203,26 @@ function App() {
     <div className="min-vh-100 bg-light w-100">
       <Navbar token={token} setCurrentView={handleSetCurrentView} />{" "}
       {currentView === "home" && (
-        <>
-          <Home token={token} setCurrentView={handleSetCurrentView} />
-
-          <Habits
-            token={token}
-            habits={habits}
-            title={title}
-            setTitle={setTitle}
-            frequency={frequency}
-            setFrequency={setFrequency}
-            createHabit={createHabit}
-            completeHabit={completeHabit}
-            deleteHabit={deleteHabit}
-          />
-        </>
+        <Home
+          token={token}
+          setCurrentView={handleSetCurrentView}
+          tasks={tasks}
+          habits={habits}
+          analytics={analytics}
+        />
+      )}
+      {currentView === "habits" && token && (
+        <Habits
+          token={token}
+          habits={habits}
+          title={title}
+          setTitle={setTitle}
+          frequency={frequency}
+          setFrequency={setFrequency}
+          createHabit={createHabit}
+          completeHabit={completeHabit}
+          deleteHabit={deleteHabit}
+        />
       )}
       {currentView === "login" && (
         <Login setCurrentView={handleSetCurrentView} />
@@ -171,6 +241,21 @@ function App() {
       )}
       {currentView === "dashboard" && !token && (
         <Login setCurrentView={handleSetCurrentView} />
+      )}
+      {currentView === "tasks" && token && (
+        <Tasks
+          token={token}
+          tasks={tasks}
+          taskTitle={taskTitle}
+          setTaskTitle={setTaskTitle}
+          taskDueDate={taskDueDate}
+          setTaskDueDate={setTaskDueDate}
+          createTask={createTask}
+          completeTask={completeTask}
+          deleteTask={deleteTask}
+          taskFrequency={taskFrequency}
+          setTaskFrequency={setTaskFrequency}
+        />
       )}
     </div>
   );

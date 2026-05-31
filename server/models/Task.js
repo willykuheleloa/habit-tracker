@@ -5,8 +5,19 @@ const taskSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
+      trim: true,
     },
 
+    dueDate: {
+      type: Date,
+      default: null,
+    },
+
+    frequency: {
+      type: String,
+      enum: ["daily", "weekly", "monthly"],
+      default: "daily",
+    },
     completed: {
       type: Boolean,
       default: false,
@@ -20,7 +31,7 @@ const taskSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("Task", taskSchema);

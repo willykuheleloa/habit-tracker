@@ -18,10 +18,11 @@ router.get("/", protect, async (req, res) => {
 
 router.post("/", protect, async (req, res) => {
   try {
-    const { title } = req.body;
-
+    const { title, dueDate, frequency } = req.body;
     const task = await Task.create({
       title,
+      dueDate: dueDate || null,
+      frequency: frequency || "daily",
       userId: req.user.id,
     });
 
@@ -36,7 +37,10 @@ router.post("/", protect, async (req, res) => {
 
 router.put("/:id", protect, async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOne({
+      _id: req.params.id,
+      userId: req.user.id,
+    });
 
     if (!task) {
       return res.status(404).json({
@@ -59,15 +63,16 @@ router.put("/:id", protect, async (req, res) => {
 
 router.delete("/:id", protect, async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user.id,
+    });
 
     if (!task) {
       return res.status(404).json({
         message: "Task not found",
       });
     }
-
-    await task.deleteOne();
 
     res.status(200).json({
       message: "Task deleted successfully",

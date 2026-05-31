@@ -1,91 +1,124 @@
-import toastr from "toastr";
+function Home({ token, setCurrentView, tasks = [], habits = [], analytics }) {
+  const upcomingTasks = tasks.slice(0, 3);
+  const currentHabits = habits.slice(0, 3);
+  const username = localStorage.getItem("username");
 
-function Home({ token, setCurrentView }) {
   return (
-    <section className="container py-5">
-      <div className="row align-items-center">
-        <div className="col-md-7">
-          <span className="badge bg-primary mb-3">Sprint 1 MVP Foundation</span>
+    <section className="container py-5 px-4">
+      <div className="mb-4">
+        <h1 className="fw-bold">Hello{username ? `, ${username}` : ""}</h1>
+        <p className="text-muted">
+          Quick overview of your tasks, habits, and progress.
+        </p>
+      </div>
 
-          <h1 className="display-4 fw-bold mb-3">
-            Build better habits. Track smarter tasks.
-          </h1>
+      {!token && (
+        <div className="alert alert-warning">
+          Please log in to view your dashboard.
+        </div>
+      )}
 
-          <p className="lead text-muted mb-4">
-            A productivity dashboard designed to help users manage tasks, track
-            habits, monitor progress, and receive simple AI-based suggestions
-            over time.
-          </p>
+      <div className="row g-4">
+        <div className="col-md-4">
+          <div className="card h-100 border-0 shadow-sm rounded-4">
+            <div className="card-body p-4">
+              <h5 className="fw-bold mb-3">Tasks</h5>
 
-          <button className="btn btn-primary btn-lg me-3">Get Started</button>
+              {upcomingTasks.length === 0 ? (
+                <p className="text-muted">No tasks yet.</p>
+              ) : (
+                upcomingTasks.map((task) => (
+                  <div key={task._id} className="mb-3">
+                    <p className="mb-1 fw-semibold">{task.title}</p>
+                    <small className="text-muted">
+                      Due:{" "}
+                      {task.dueDate
+                        ? new Date(task.dueDate).toLocaleDateString()
+                        : "No due date"}
+                    </small>
+                  </div>
+                ))
+              )}
 
-          <button
-            className="btn btn-primary btn-lg"
-            onClick={() => {
-              if (!token) {
-                toastr.warning("Please log in before viewing the dashboard.");
-                setCurrentView("login");
-                return;
-              }
-
-              setCurrentView("dashboard");
-            }}
-          >
-            View Dashboard
-          </button>
+              <button
+                className="btn btn-primary btn-sm mt-2"
+                onClick={() => setCurrentView("tasks")}
+              >
+                View Tasks
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="col-md-5 mt-4 mt-md-0">
-          <div className="card shadow-sm border-0">
+        <div className="col-md-4">
+          <div className="card h-100 border-0 shadow-sm rounded-4">
             <div className="card-body p-4">
-              <h4 className="fw-bold mb-3">Today’s Preview</h4>
+              <h5 className="fw-bold mb-3">Habits</h5>
 
-              <div className="mb-3">
-                <label className="form-label">Task Progress</label>
-                <div className="progress">
-                  <div className="progress-bar" style={{ width: "65%" }}>
-                    65%
+              {currentHabits.length === 0 ? (
+                <p className="text-muted">No habits yet.</p>
+              ) : (
+                currentHabits.map((habit) => (
+                  <div key={habit._id} className="mb-3">
+                    <p className="mb-1 fw-semibold">{habit.title}</p>
+                    <small className="text-muted">
+                      Frequency: {habit.frequency}
+                    </small>
                   </div>
-                </div>
-              </div>
+                ))
+              )}
 
-              <ul className="list-group list-group-flush">
-                <li className="list-group-item d-flex justify-content-between">
-                  Complete project setup
-                  <span className="badge bg-success">Done</span>
-                </li>
-                <li className="list-group-item d-flex justify-content-between">
-                  Track daily habit
-                  <span className="badge bg-warning text-dark">Pending</span>
-                </li>
-                <li className="list-group-item d-flex justify-content-between">
-                  Review progress
-                  <span className="badge bg-secondary">Planned</span>
-                </li>
-              </ul>
+              <button
+                className="btn btn-success btn-sm mt-2"
+                onClick={() => setCurrentView("habits")}
+              >
+                View Habits
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-4">
+          <div className="card h-100 border-0 shadow-sm rounded-4">
+            <div className="card-body p-4">
+              <h5 className="fw-bold mb-3">Progress</h5>
+
+              <p className="mb-2">
+                Total Habits:{" "}
+                <span className="fw-bold">{analytics?.totalHabits || 0}</span>
+              </p>
+
+              <p className="mb-2">
+                Best Streak:{" "}
+                <span className="fw-bold">{analytics?.bestStreak || 0}</span>
+              </p>
+
+              <p className="mb-2">
+                Total Completions:{" "}
+                <span className="fw-bold">
+                  {analytics?.totalCompletions || 0}
+                </span>
+              </p>
+
+              <button
+                className="btn btn-dark btn-sm mt-2"
+                onClick={() => setCurrentView("dashboard")}
+              >
+                View Analytics
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="row text-center mt-5">
-        {["Authentication", "Tasks", "Habits", "AI Suggestions"].map((item) => (
-          <div className="col-md-3 mb-3" key={item}>
-            <div className="card h-100 border-0 shadow-sm">
-              <div className="card-body">
-                <h5 className="fw-bold">{item}</h5>
-                <p className="text-muted">
-                  {item === "Authentication" &&
-                    "Secure login and registration."}
-                  {item === "Tasks" && "Create, edit, and complete tasks."}
-                  {item === "Habits" && "Track routines and streaks."}
-                  {item === "AI Suggestions" &&
-                    "Simple insights based on progress."}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="card border-0 shadow-sm rounded-4 mt-4">
+        <div className="card-body p-4">
+          <h5 className="fw-bold">AI Suggestion</h5>
+          <p className="text-muted mb-0">
+            Smart productivity suggestions will appear here based on your tasks
+            and habits.
+          </p>
+        </div>
       </div>
     </section>
   );

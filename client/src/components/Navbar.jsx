@@ -24,26 +24,40 @@ function Navbar({ token, setCurrentView }) {
 
       <div className="ms-auto">
         {token ? (
-          <button className="btn btn-danger" onClick={handleLogout}>
-            Logout
-          </button>
-        ) : (
           <>
             <button
               className="btn btn-outline-light me-2"
-              onClick={() => setCurrentView("login")}
+              onClick={() => setCurrentView("home")}
             >
-              Login
+              Home
             </button>
 
             <button
-              className="btn btn-primary"
-              onClick={() => setCurrentView("register")}
+              className="btn btn-outline-light me-2"
+              onClick={() => setCurrentView("tasks")}
             >
-              Register
+              Tasks
+            </button>
+
+            <button
+              className="btn btn-outline-light me-2"
+              onClick={() => setCurrentView("habits")}
+            >
+              Habits
+            </button>
+
+            <button
+              className="btn btn-outline-light me-2"
+              onClick={() => setCurrentView("dashboard")}
+            >
+              Dashboard
+            </button>
+
+            <button className="btn btn-danger" onClick={handleLogout}>
+              Logout
             </button>
           </>
-        )}
+        ) : null}
       </div>
     </nav>
   );
