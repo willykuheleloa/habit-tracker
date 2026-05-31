@@ -6,12 +6,61 @@ const { protect } = require("../middleware/authMiddleware");
 
 const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+const isTaskOverdue = (task) => {
+  if (!task.dueDate || task.completed) {
+    return false;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const dueDate = new Date(task.dueDate);
+  dueDate.setHours(0, 0, 0, 0);
+
+  return dueDate < today;
+};
+
+const isDailyHabitMissedToday = (habit) => {
+  if (habit.frequency?.toLowerCase() !== "daily") {
+    return false;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return !habit.completedDates.some((completedDate) => {
+    const date = new Date(completedDate);
+    date.setHours(0, 0, 0, 0);
+    return date.getTime() === today.getTime();
+  });
+};
+
 const getFallbackSuggestion = ({
+  overdueTasks,
+  missedHabits,
   pendingTasks,
   totalHabits,
   totalCompletions,
   bestStreak,
 }) => {
+  if (overdueTasks > 0) {
+    return {
+      suggestion: `You have ${overdueTasks} overdue task${overdueTasks === 1 ? "" : "s"}.`,
+      reason: "Tasks past their due date can build up quickly if they are not handled.",
+      focusArea: "Missed Tasks",
+      actionStep: "Start with the oldest overdue task today.",
+    };
+  }
+
+  if (missedHabits > 0) {
+    return {
+      suggestion: `You have ${missedHabits} daily habit${missedHabits === 1 ? "" : "s"} not completed today.`,
+      reason: "Completing daily habits consistently helps build stronger routines.",
+      focusArea: "Missed Habits",
+      actionStep: "Pick one daily habit and complete it before the day ends.",
+    };
+  }
+
   if (pendingTasks > 0) {
     return {
       suggestion: `You have ${pendingTasks} pending task${pendingTasks === 1 ? "" : "s"}.`,
@@ -56,12 +105,15 @@ const getAiSuggestion = async (summary, habits, tasks) => {
     const taskSummary = tasks.map((task) => ({
       title: task.title,
       completed: task.completed,
+      dueDate: task.dueDate,
+      isOverdue: isTaskOverdue(task),
     }));
 
     const habitSummary = habits.map((habit) => ({
       title: habit.title,
       frequency: habit.frequency,
       streakCount: habit.streakCount,
+      isMissedToday: isDailyHabitMissedToday(habit),
       completedDates: habit.completedDates.slice(-10),
     }));
 
@@ -78,7 +130,7 @@ const getAiSuggestion = async (summary, habits, tasks) => {
           {
             role: "system",
             content:
-              "You are a productivity coach for a student task and habit tracker app. Return only valid JSON with these exact keys: suggestion, reason, focusArea, actionStep. Keep each value short, specific, and helpful. Do not invent data.",
+              "You are a productivity coach for a student task and habit tracker app. Return only valid JSON with these exact keys: suggestion, reason, focusArea, actionStep. Prioritize overdue tasks, missed daily habits, pending tasks, then habit consistency. Keep each value short, specific, and helpful. Do not invent data.",
           },
           {
             role: "user",
@@ -233,7 +285,11 @@ router.get("/suggestion", protect, async (req, res) => {
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter((task) => task.completed).length;
     const pendingTasks = tasks.filter((task) => !task.completed).length;
+    const overdueTasks = tasks.filter((task) => isTaskOverdue(task)).length;
     const totalHabits = habits.length;
+    const missedHabits = habits.filter((habit) =>
+      isDailyHabitMissedToday(habit),
+    ).length;
 
     const totalCompletions = habits.reduce(
       (total, habit) => total + habit.completedDates.length,
@@ -249,7 +305,9 @@ router.get("/suggestion", protect, async (req, res) => {
       totalTasks,
       completedTasks,
       pendingTasks,
+      overdueTasks,
       totalHabits,
+      missedHabits,
       totalCompletions,
       bestStreak,
     };
