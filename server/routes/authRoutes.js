@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { protect } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -66,6 +67,10 @@ router.post("/login", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
+});
+
+router.post("/logout", protect, (req, res) => {
+  res.status(200).json({ message: "Logged out successfully" });
 });
 
 module.exports = router;

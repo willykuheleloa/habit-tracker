@@ -1,3 +1,5 @@
+import toastr from "toastr";
+
 function Home({ token, setCurrentView }) {
   return (
     <section className="container py-5">
@@ -21,7 +23,7 @@ function Home({ token, setCurrentView }) {
             className="btn btn-primary btn-lg"
             onClick={() => {
               if (!token) {
-                alert("Please log in first.");
+                toastr.warning("Please log in before viewing the dashboard.");
                 setCurrentView("login");
                 return;
               }

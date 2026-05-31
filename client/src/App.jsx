@@ -12,6 +12,7 @@ import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
 import Habits from "./pages/Habits";
+import toastr from "toastr";
 
 function App() {
   const [habits, setHabits] = useState([]);
@@ -22,7 +23,7 @@ function App() {
   const [title, setTitle] = useState("");
   const [frequency, setFrequency] = useState("Daily");
 
-  const token = localStorage.getItem("token");
+  const [token, setToken] = useState(localStorage.getItem("token"));
   const analytics = analyticsData || {
     totalHabits: 0,
     totalCompletions: 0,
@@ -52,11 +53,25 @@ function App() {
     }
   };
 
+  const handleSetCurrentView = (view) => {
+    const currentToken = localStorage.getItem("token");
+    setToken(currentToken);
+
+    if (view === "dashboard" && !currentToken) {
+      toastr.warning("Please log in to view your dashboard.");
+      setCurrentView("login");
+      return;
+    }
+
+    setCurrentView(view);
+  };
+
   const createHabit = async (e) => {
     e.preventDefault();
 
     if (!token) {
-      alert("Please log in before adding habits.");
+      toastr.warning("Please log in first.");
+      setCurrentView("login");
       return;
     }
 
@@ -103,6 +118,16 @@ function App() {
   };
 
   useEffect(() => {
+    const currentToken = localStorage.getItem("token");
+    setToken(currentToken);
+
+    if (currentView === "dashboard" && !currentToken) {
+      toastr.warning("Please log in to view your dashboard.");
+      setCurrentView("login");
+    }
+  }, [currentView]);
+
+  useEffect(() => {
     if (token) {
       fetchHabits();
       fetchAnalytics();
@@ -111,10 +136,10 @@ function App() {
 
   return (
     <div className="min-vh-100 bg-light w-100">
-      <Navbar token={token} setCurrentView={setCurrentView} />
+      <Navbar token={token} setCurrentView={handleSetCurrentView} />{" "}
       {currentView === "home" && (
         <>
-          <Home token={token} setCurrentView={setCurrentView} />
+          <Home token={token} setCurrentView={handleSetCurrentView} />
 
           <Habits
             token={token}
@@ -129,21 +154,23 @@ function App() {
           />
         </>
       )}
-
-      {currentView === "login" && <Login setCurrentView={setCurrentView} />}
-
-      {currentView === "register" && (
-        <Register setCurrentView={setCurrentView} />
+      {currentView === "login" && (
+        <Login setCurrentView={handleSetCurrentView} />
       )}
-
-      {currentView === "dashboard" && (
+      {currentView === "register" && (
+        <Register setCurrentView={handleSetCurrentView} />
+      )}
+      {currentView === "dashboard" && token && (
         <Dashboard
           analytics={analytics}
           weeklyCompletions={weeklyCompletions}
           weeklyMax={weeklyMax}
           usingDemoAnalytics={usingDemoAnalytics}
-          setCurrentView={setCurrentView}
+          setCurrentView={handleSetCurrentView}
         />
+      )}
+      {currentView === "dashboard" && !token && (
+        <Login setCurrentView={handleSetCurrentView} />
       )}
     </div>
   );

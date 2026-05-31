@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { loginUser } from "../services/api";
+import toastr from "toastr";
 
 function Login({ setCurrentView }) {
   const [email, setEmail] = useState("");
@@ -13,14 +14,15 @@ function Login({ setCurrentView }) {
 
       localStorage.setItem("token", data.token);
 
-      alert("Login successful!");
+      toastr.success("Login successful!");
 
-      setCurrentView("home");
-
-      // window.location.reload();
+      setTimeout(() => {
+        setCurrentView("home");
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error(error);
-      alert("Login failed");
+      toastr.error(error.message || "Login failed. Please try again.");
     }
   };
 
@@ -65,9 +67,9 @@ function Login({ setCurrentView }) {
             <button
               type="button"
               className="btn btn-outline-secondary w-100 mt-2"
-              onClick={() => setCurrentView("home")}
+              onClick={() => setCurrentView("register")}
             >
-              Back
+              No account? Register
             </button>
           </form>
         </div>

@@ -37,6 +37,12 @@ export const registerUser = (userData) => {
   });
 };
 
+export const logoutUser = () => {
+  return apiRequest("/auth/logout", {
+    method: "POST",
+  });
+};
+
 export const getHabits = () => apiRequest("/habits");
 
 export const createHabitRequest = (habitData) => {

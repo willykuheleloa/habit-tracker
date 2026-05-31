@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { registerUser } from "../services/api";
+import toastr from "toastr";
 
 function Register({ setCurrentView }) {
   const [username, setUsername] = useState("");
@@ -10,20 +11,20 @@ function Register({ setCurrentView }) {
     e.preventDefault();
 
     try {
-      const data = await registerUser({
+      await registerUser({
         name: username,
         email,
         password,
       });
 
-      console.log("REGISTER SUCCESS:", data);
+      toastr.success("Registration successful! Please log in.");
 
-      alert("Registration successful! Please log in.");
-
-      setCurrentView("login");
+      setTimeout(() => {
+        setCurrentView("login");
+      }, 1000);
     } catch (error) {
       console.error(error);
-      alert("Registration failed");
+      toastr.error(error.message || "Registration failed. Please try again.");
     }
   };
 
@@ -80,17 +81,9 @@ function Register({ setCurrentView }) {
             <button
               type="button"
               className="btn btn-outline-secondary w-100 mt-2"
-              onClick={() => setCurrentView("home")}
-            >
-              Back
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-link w-100 mt-2"
               onClick={() => setCurrentView("login")}
             >
-              Already registered? Login
+              Already have an account? Login
             </button>
           </form>
         </div>
