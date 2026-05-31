@@ -2,23 +2,30 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
+  AlertTriangle,
   BarChart3,
   Brain,
-  CheckCircle2,
   Clock,
   Flame,
   Lightbulb,
+  ShieldAlert,
   Target,
+  TrendingUp,
 } from "lucide-react";
+
 import {
   Bar,
   BarChart,
   CartesianGrid,
+  Pie,
+  PieChart,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+
 import toastr from "toastr";
 import { getAiSuggestion, getAnalytics } from "../services/api";
 
@@ -42,10 +49,6 @@ function Dashboard() {
     }
   };
 
-  useEffect(() => {
-    loadAnalytics();
-  }, []);
-
   const generateSuggestion = async () => {
     setLoadingSuggestion(true);
 
@@ -59,6 +62,11 @@ function Dashboard() {
       setLoadingSuggestion(false);
     }
   };
+
+  useEffect(() => {
+    loadAnalytics();
+    generateSuggestion();
+  }, []);
 
   if (loading) {
     return (
@@ -75,7 +83,13 @@ function Dashboard() {
   const taskData = analytics?.tasks || {};
   const habitData = analytics?.habits || {};
   const summary = analytics?.summary || {};
+  const improvementAreas = analytics?.improvementAreas || [];
   const weeklyCompletions = habitData.weeklyCompletions || [];
+  const categoryBreakdown = taskData.categoryBreakdown || [];
+
+  const productivityScore = summary.productivityScore || 0;
+
+  const chartColors = ["#2563eb", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"];
 
   return (
     <section className="container py-5 px-4">
@@ -93,8 +107,8 @@ function Dashboard() {
             <h1 className="fw-bold mb-2">Progress & AI Insights</h1>
 
             <p className="text-muted mb-0">
-              Review your task completion, habit consistency, and AI-powered
-              productivity recommendations.
+              Review your productivity trends, improvement areas, habits, and
+              AI-generated coaching insights.
             </p>
           </div>
 
@@ -112,21 +126,41 @@ function Dashboard() {
               <div className="dashboard-icon bg-dark text-white mb-3">
                 <Target size={22} />
               </div>
+
               <p className="text-muted mb-1">Productivity Score</p>
-              <h3 className="fw-bold mb-0">
-                {summary.productivityScore || 0}%
+
+              <h3
+                className={`fw-bold mb-0 ${
+                  productivityScore >= 80
+                    ? "text-success"
+                    : productivityScore >= 50
+                      ? "text-warning"
+                      : "text-danger"
+                }`}
+              >
+                {productivityScore}%
               </h3>
             </div>
           </div>
 
           <div className="col-md-3">
             <div className="stat-card">
-              <div className="dashboard-icon bg-primary text-white mb-3">
-                <CheckCircle2 size={22} />
+              <div className="dashboard-icon bg-danger text-white mb-3">
+                <AlertTriangle size={22} />
               </div>
-              <p className="text-muted mb-1">Tasks Completed</p>
+              <p className="text-muted mb-1">Overdue Tasks</p>
+              <h3 className="fw-bold mb-0">{taskData.overdueTasks || 0}</h3>
+            </div>
+          </div>
+
+          <div className="col-md-3">
+            <div className="stat-card">
+              <div className="dashboard-icon bg-warning text-dark mb-3">
+                <ShieldAlert size={22} />
+              </div>
+              <p className="text-muted mb-1">High Priority Pending</p>
               <h3 className="fw-bold mb-0">
-                {taskData.completedTasks || 0}/{taskData.totalTasks || 0}
+                {taskData.highPriorityPending || 0}
               </h3>
             </div>
           </div>
@@ -136,18 +170,8 @@ function Dashboard() {
               <div className="dashboard-icon bg-success text-white mb-3">
                 <Flame size={22} />
               </div>
-              <p className="text-muted mb-1">Best Streak</p>
+              <p className="text-muted mb-1">Best Habit Streak</p>
               <h3 className="fw-bold mb-0">{habitData.bestStreak || 0} days</h3>
-            </div>
-          </div>
-
-          <div className="col-md-3">
-            <div className="stat-card">
-              <div className="dashboard-icon bg-warning text-dark mb-3">
-                <Clock size={22} />
-              </div>
-              <p className="text-muted mb-1">Pending Tasks</p>
-              <h3 className="fw-bold mb-0">{taskData.pendingTasks || 0}</h3>
             </div>
           </div>
         </div>
@@ -166,24 +190,88 @@ function Dashboard() {
                     No weekly completion data available yet.
                   </p>
                 ) : (
-                  <div style={{ height: 300 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={weeklyCompletions}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="day" />
-                        <YAxis allowDecimals={false} />
-                        <Tooltip />
-                        <Bar dataKey="count" radius={[8, 8, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <>
+                    <div style={{ height: 300 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={weeklyCompletions}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="day" />
+                          <YAxis allowDecimals={false} />
+                          <Tooltip />
+                          <Bar dataKey="count" radius={[8, 8, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {weeklyCompletions.every((day) => day.count === 0) && (
+                      <p className="text-muted small mt-3 mb-0">
+                        Complete habits throughout the week to build trend data.
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             </div>
           </div>
 
           <div className="col-lg-4">
-            <div className="card border-0 shadow-sm rounded-4 h-100 ai-card">
+            <div className="card border-0 shadow-sm rounded-4 h-100">
+              <div className="card-body p-4">
+                <div className="d-flex align-items-center gap-2 mb-3">
+                  <TrendingUp size={20} />
+                  <h5 className="fw-bold mb-0">Category Breakdown</h5>
+                </div>
+
+                {categoryBreakdown.length === 0 ? (
+                  <p className="text-muted">No category data available.</p>
+                ) : (
+                  <>
+                    <div style={{ height: 250 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={categoryBreakdown}
+                            dataKey="total"
+                            nameKey="category"
+                            outerRadius={90}
+                          >
+                            {categoryBreakdown.map((_, index) => (
+                              <Cell
+                                key={index}
+                                fill={chartColors[index % chartColors.length]}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <div className="mt-3">
+                      {categoryBreakdown.map((category) => (
+                        <div
+                          key={category.category}
+                          className="d-flex justify-content-between mb-2"
+                        >
+                          <span className="text-capitalize">
+                            {category.category}
+                          </span>
+                          <span className="fw-semibold">
+                            {category.completionRate}%
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="row g-4 mb-4 align-items-start">
+          <div className="col-lg-5">
+            <div className="card border-0 shadow-sm rounded-4 ai-card">
               <div className="card-body p-4">
                 <div className="d-flex align-items-center gap-2 mb-3">
                   <Brain size={20} />
@@ -192,19 +280,38 @@ function Dashboard() {
 
                 {suggestion ? (
                   <>
-                    <p className="fw-semibold mb-2">{suggestion.suggestion}</p>
+                    <h5 className="fw-bold mb-2">{suggestion.suggestion}</h5>
 
                     <p className="text-muted small mb-3">{suggestion.reason}</p>
 
-                    <div className="ai-action-box">
+                    <div className="ai-action-box mb-3">
                       <Lightbulb size={18} />
                       <span>{suggestion.actionStep}</span>
+                    </div>
+
+                    <div className="small">
+                      <p className="mb-2">
+                        <span className="fw-bold">Focus Area:</span>{" "}
+                        {suggestion.focusArea}
+                      </p>
+
+                      <p className="mb-2">
+                        <span className="fw-bold">Improvement:</span>{" "}
+                        {suggestion.improvementArea}
+                      </p>
+
+                      {suggestion.priorityWarning && (
+                        <p className="text-danger fw-semibold mb-0">
+                          {suggestion.priorityWarning}
+                        </p>
+                      )}
                     </div>
                   </>
                 ) : (
                   <p className="text-muted">
-                    Generate a personalized suggestion based on your current
-                    tasks and habits.
+                    {loadingSuggestion
+                      ? "Generating your personalized insight..."
+                      : "Generate a personalized AI insight based on your current tasks and habits."}
                   </p>
                 )}
 
@@ -213,20 +320,86 @@ function Dashboard() {
                   onClick={generateSuggestion}
                   disabled={loadingSuggestion}
                 >
-                  {loadingSuggestion ? "Generating..." : "Generate AI Insight"}
+                  {loadingSuggestion ? "Generating..." : "Refresh AI Insight"}
                 </button>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className="card border-0 shadow-sm rounded-4">
-          <div className="card-body p-4">
-            <h5 className="fw-bold mb-3">Summary</h5>
-            <p className="text-muted mb-0">
-              {summary.message ||
-                "Complete more tasks and habits to unlock stronger analytics."}
-            </p>
+            <div className="card border-0 shadow-sm rounded-4 mt-4">
+              <div className="card-body p-4">
+                <h5 className="fw-bold mb-3">Productivity Summary</h5>
+
+                <p className="text-muted mb-0">
+                  {summary.message ||
+                    "Complete more tasks and habits to unlock stronger analytics."}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-lg-7">
+            <div className="card border-0 shadow-sm rounded-4">
+              <div className="card-body p-4">
+                <div className="d-flex align-items-center gap-2 mb-4">
+                  <Clock size={20} />
+                  <h5 className="fw-bold mb-0">Improvement Areas</h5>
+                </div>
+
+                {improvementAreas.length === 0 ? (
+                  <p className="text-muted mb-0">
+                    No major improvement areas detected. Great work.
+                  </p>
+                ) : (
+                  improvementAreas.map((area) => (
+                    <div key={area.title} className="improvement-card">
+                      <div className="d-flex justify-content-between align-items-start mb-2">
+                        <h6 className="fw-bold mb-0">{area.title}</h6>
+
+                        <span className={`severity-badge ${area.severity}`}>
+                          {area.severity}
+                        </span>
+                      </div>
+
+                      <p className="text-muted mb-3">{area.message}</p>
+
+                      {area.tasks && area.tasks.length > 0 && (
+                        <div className="d-flex flex-column gap-2">
+                          {area.tasks.map((task) => (
+                            <div
+                              key={task.id}
+                              className="improvement-task-item"
+                            >
+                              <div>
+                                <p className="fw-semibold mb-1">{task.title}</p>
+
+                                <div className="d-flex gap-2 flex-wrap">
+                                  <span className="mini-pill">
+                                    {task.priority}
+                                  </span>
+
+                                  <span className="mini-pill">
+                                    {task.category}
+                                  </span>
+
+                                  {task.dueDate && (
+                                    <span className="mini-pill">
+                                      Due{" "}
+                                      {new Date(
+                                        task.dueDate,
+                                      ).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
