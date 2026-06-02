@@ -79,6 +79,13 @@ export const completeTaskRequest = (id) => {
   });
 };
 
+export const editTaskRequest = (id, taskData) => {
+  return apiRequest(`/tasks/${id}/edit`, {
+    method: "PATCH",
+    body: JSON.stringify(taskData),
+  });
+};
+
 export const deleteTaskRequest = (id) => {
   return apiRequest(`/tasks/${id}`, {
     method: "DELETE",

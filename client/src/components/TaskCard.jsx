@@ -1,7 +1,15 @@
-import { Calendar, CheckCircle2, Repeat, Tag, Trash2 } from "lucide-react";
+import {
+  Calendar,
+  CheckCircle2,
+  Repeat,
+  Tag,
+  Trash2,
+  Pencil,
+} from "lucide-react";
+
 import { motion } from "framer-motion";
 
-function TaskCard({ task, completeTask, deleteTask }) {
+function TaskCard({ task, completeTask, deleteTask, openEditModal }) {
   const formattedDate = task.dueDate
     ? new Date(task.dueDate).toLocaleDateString()
     : "No due date";
@@ -29,13 +37,23 @@ function TaskCard({ task, completeTask, deleteTask }) {
             <div className={`task-priority-badge ${priority}`}>{priority}</div>
           </div>
 
-          <button
-            type="button"
-            className="btn btn-sm btn-light rounded-circle"
-            onClick={() => deleteTask(task._id)}
-          >
-            <Trash2 size={16} />
-          </button>
+          <div className="d-flex gap-2">
+            <button
+              type="button"
+              className="btn btn-sm btn-light rounded-circle"
+              onClick={() => openEditModal(task)}
+            >
+              <Pencil size={16} />
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-sm btn-light rounded-circle"
+              onClick={() => deleteTask(task._id)}
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
 
         <h5
@@ -55,11 +73,7 @@ function TaskCard({ task, completeTask, deleteTask }) {
 
         <div className="task-meta mb-2">
           <Repeat size={16} />
-          <span>
-            {task.frequency === "once"
-              ? "One-time task"
-              : `Repeats ${task.frequency}`}
-          </span>
+          <span>{task.frequency === "once" ? "One Time" : task.frequency}</span>
         </div>
 
         <div className="task-meta mb-4">
