@@ -6,6 +6,7 @@ import Tasks from "./pages/Tasks";
 import Habits from "./pages/Habits";
 import Dashboard from "./pages/Dashboard";
 import AppLayout from "./components/layout/AppLayout";
+import AiReminderCenter from "./pages/AiReminderCenter";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -87,6 +88,15 @@ function App() {
       />
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
+      <Route
+        path="/ai-reminders"
+        element={
+          <ProtectedRoute>
+            <AiReminderCenter />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

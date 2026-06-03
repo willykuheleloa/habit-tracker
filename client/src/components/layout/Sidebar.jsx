@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   BarChart3,
+  Bell,
   CheckSquare,
   Flame,
   LayoutDashboard,
@@ -39,6 +40,11 @@ function Sidebar() {
       label: "Analytics",
       path: "/analytics",
       icon: BarChart3,
+    },
+    {
+      label: "AI Reminders",
+      path: "/ai-reminders",
+      icon: Bell,
     },
   ];
 

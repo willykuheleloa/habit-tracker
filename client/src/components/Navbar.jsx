@@ -43,6 +43,10 @@ function Navbar() {
           Analytics
         </NavLink>
 
+        <NavLink to="/ai-reminders" className="nav-link">
+          AI Reminders
+        </NavLink>
+
         <button className="btn btn-danger" onClick={handleLogout}>
           Logout
         </button>

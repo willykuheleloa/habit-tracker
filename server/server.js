@@ -1,3 +1,4 @@
+const aiReminderRoutes = require("./routes/aiReminderRoutes");
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
@@ -15,6 +16,7 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/tasks", require("./routes/taskRoutes"));
 app.use("/api/habits", require("./routes/habitRoutes"));
 app.use("/api/analytics", require("./routes/analyticsRoutes"));
+app.use("/api/ai-reminders", aiReminderRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running");

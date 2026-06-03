@@ -95,3 +95,5 @@ export const deleteTaskRequest = (id) => {
 export const getAnalytics = () => apiRequest("/analytics");
 
 export const getAiSuggestion = () => apiRequest("/analytics/suggestion");
+
+export const getAiReminders = () => apiRequest("/ai-reminders");
