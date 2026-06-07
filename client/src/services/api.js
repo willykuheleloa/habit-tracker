@@ -92,6 +92,19 @@ export const deleteTaskRequest = (id) => {
   });
 };
 
+export const checkInHabitRequest = (id) => {
+  return apiRequest(`/habits/${id}/check-in`, {
+    method: "PATCH",
+  });
+};
+
+export const editHabitRequest = (id, habitData) => {
+  return apiRequest(`/habits/${id}/edit`, {
+    method: "PATCH",
+    body: JSON.stringify(habitData),
+  });
+};
+
 export const getAnalytics = () => apiRequest("/analytics");
 
 export const getAiSuggestion = () => apiRequest("/analytics/suggestion");

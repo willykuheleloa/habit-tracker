@@ -5,18 +5,20 @@ function HabitForm({
   setHabitTitle,
   habitFrequency,
   setHabitFrequency,
+  habitCategory,
+  setHabitCategory,
   createHabit,
 }) {
   return (
     <form onSubmit={createHabit} className="task-form-card mb-4">
       <div className="row g-3 align-items-end">
-        <div className="col-lg-7">
+        <div className="col-lg-5">
           <label className="form-label fw-semibold">Habit Name</label>
 
           <input
             type="text"
             className="form-control form-control-lg rounded-4"
-            placeholder="Enter a habit to build"
+            placeholder="What behavior are you building?"
             value={habitTitle}
             onChange={(e) => setHabitTitle(e.target.value)}
             required
@@ -24,6 +26,23 @@ function HabitForm({
         </div>
 
         <div className="col-lg-3">
+          <label className="form-label fw-semibold">Category</label>
+
+          <select
+            className="form-select form-select-lg rounded-4"
+            value={habitCategory}
+            onChange={(e) => setHabitCategory(e.target.value)}
+          >
+            <option value="health">Health</option>
+            <option value="focus">Focus</option>
+            <option value="discipline">Discipline</option>
+            <option value="learning">Learning</option>
+            <option value="wellness">Wellness</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div className="col-lg-2">
           <label className="form-label fw-semibold">Frequency</label>
 
           <select
