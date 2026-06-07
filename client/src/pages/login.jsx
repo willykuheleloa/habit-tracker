@@ -17,7 +17,7 @@ function Login() {
       const data = await loginUser({ email, password });
 
       localStorage.setItem("token", data.token);
-      localStorage.setItem("username", data.username);
+      localStorage.setItem("username", data.name);
 
       toastr.success("Login successful!");
 
